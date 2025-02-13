@@ -5,12 +5,13 @@
 	"main": "dist/index.js",
 	"scripts": {
 		"build": "tsc",
-		"dev": "ts-node src/index.ts",
+		"dev": "nodemon src/index.ts",
 		"start": "node dist/index.js"
 	},
 	"dependencies": {
 		"@wppconnect-team/wppconnect": "^1.30.0",
 		"dotenv": "^16.4.7",
+		"nodemon": "^3.1.9",
 		"sharp": "^0.32.6"
 	},
 	"devDependencies": {

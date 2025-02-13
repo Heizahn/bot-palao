@@ -11,7 +11,7 @@ async function main() {
 			},
 		});
 
-		bot({ client });
+		bot(client);
 	} catch (error) {
 		console.error(error);
 	}

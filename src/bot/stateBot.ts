@@ -1,4 +1,3 @@
-import { Message } from '@wppconnect-team/wppconnect';
 import { ChatState } from '../interfaces/interfaces';
 
 class ChatStateManager {
