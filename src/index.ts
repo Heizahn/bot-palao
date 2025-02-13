@@ -6,6 +6,9 @@ async function main() {
 	try {
 		const client = await wppconnect.create({
 			session: botSession,
+			puppeteerOptions: {
+				args: ['--no-sandbox', '--disable-setuid-sandbox'],
+			},
 		});
 
 		bot({ client });

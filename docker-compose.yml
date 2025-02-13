@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+    bot:
+        build: .
+        container_name: bot-palao
+        ports:
+            - '8021:8021'
+        volumes:
+            - .:/usr/src/app
+            - /usr/src/app/node_modules
+        env_file:
+            - .env
+        restart: unless-stopped
