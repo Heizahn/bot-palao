@@ -12,4 +12,6 @@ export const messages = {
 	invalid: `⚠️ Opción no válida. Por favor, selecciona una opción del menú.`,
 
 	goodbye: `👋 ¡Gracias por tu interés! Si tienes más preguntas, no dudes en escribirnos nuevamente.`,
+
+	success: `¡Gracias por tu interés! Nos pondremos en contacto contigo a la brevedad posible.`,
 };
