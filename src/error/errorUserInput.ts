@@ -17,7 +17,7 @@ export function errorUserInput(userInput: {
 	const regexName = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(?:\s[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)+$/;
 	const regexTlf = /^[0-9]{11}$/;
 	const regexDate = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/([0-9]{4})$/;
-	const regexTime = /^[a-c]$/i;
+	const regexTime = /^(descubrimiento|crecimiento|diversi[oó]n)$/i;
 
 	if (Object.values(userInput).some((value) => value === undefined)) {
 		errors['error'] = 'Faltan datos por completar';

@@ -1,8 +1,7 @@
-import { Message } from '@wppconnect-team/wppconnect';
+import { Message, MessageType } from '@wppconnect-team/wppconnect';
 import { Bot } from '../interfaces/interfaces';
 import { stateManage } from './stateBot';
 import { messages } from './menuMessage';
-import { errorUserInput } from '../error/errorUserInput';
 import { handleCensusInput, handleMenuOption } from './functionsAux';
 
 export default function bot(client: Bot['client']): void {
@@ -10,25 +9,39 @@ export default function bot(client: Bot['client']): void {
 
 	client.onMessage(async (message: Message) => {
 		try {
-			if (
-				message.isGroupMsg ||
-				!(message.type === 'chat') ||
-				message.from === 'status@broadcast'
-			) {
+			// Validaciones iniciales permanecen igual
+			if (message.isGroupMsg || message.from === 'status@broadcast') {
 				return;
 			}
 
 			const chatId = message.from;
 			const state = stateManage.getState(chatId);
-			const userInput = message.body?.trim() || '';
 
+			let userInput: string;
+
+			// Modificamos la extracción del input para manejar el botón de retorno
+			if (message.type === 'list_response') {
+				if (message.body?.includes('Volver al Menú')) {
+					userInput = 'BACK_TO_MENU';
+				} else {
+					const match = message.body?.match(/^(\d+)️⃣/);
+					userInput = match ? match[1] : '';
+				}
+			} else if (message.type === MessageType.CHAT) {
+				userInput = message.body?.trim() || '';
+				// Convertimos el '0' a BACK_TO_MENU para unificar la lógica de retorno
+				if (userInput === '0') {
+					userInput = 'BACK_TO_MENU';
+				}
+			} else {
+				return;
+			}
+
+			// Manejamos los diferentes estados con la nueva lógica de botones
 			switch (state.currentState) {
 				case 'INITIAL':
-					await client.sendText(chatId, messages.welcome);
-					stateManage.setState(chatId, {
-						currentState: 'MENU',
-						lastMessage: messages.welcome,
-					});
+					await handleMenuOption(client, chatId, 'SHOW_MENU');
+					stateManage.setState(chatId, { currentState: 'MENU' });
 					break;
 
 				case 'MENU':
@@ -42,23 +55,51 @@ export default function bot(client: Bot['client']): void {
 				case 'INFO':
 				case 'SCHEDULE':
 				case 'PAYMENT':
-					if (userInput === '0') {
-						await client.sendText(chatId, messages.welcome);
+					// Simplificamos el manejo de retorno al menú
+					if (userInput === 'BACK_TO_MENU') {
+						console.log('Volviendo al menú principal...');
 						stateManage.setState(chatId, {
 							currentState: 'MENU',
-							lastMessage: messages.welcome,
+							lastMessage: 'menu',
 						});
+						await handleMenuOption(client, chatId, 'SHOW_MENU');
 					} else {
 						await client.sendText(chatId, messages.invalid);
+						// Mostramos el botón de retorno después del mensaje de error
+						const backButton = {
+							buttonText: '🔙 Volver al Menú',
+							description: 'Selecciona para regresar al menú principal',
+							sections: [
+								{
+									title: 'Navegación',
+									rows: [
+										{
+											rowId: 'BACK_TO_MENU',
+											title: '🔙 Volver al Menú Principal',
+											description: 'Regresar al menú de opciones',
+										},
+									],
+								},
+							],
+						};
+						await client.sendListMessage(chatId, backButton);
 					}
 					break;
 			}
 		} catch (error) {
-			console.error('Error en el bot', error);
+			console.error('Error detallado en el bot:', error);
+			// Mejoramos el mensaje de error y proporcionamos una forma de volver al menú
 			await client.sendText(
 				message.from,
-				'Ocurrió un error. Por favor, intenta de nuevo.',
+				'Lo siento, ocurrió un error. Volvamos al menú principal...',
 			);
+			// Intentamos mostrar el menú principal después de un error
+			try {
+				await handleMenuOption(client, message.from, 'SHOW_MENU');
+				stateManage.setState(message.from, { currentState: 'MENU' });
+			} catch (menuError) {
+				console.error('Error al mostrar menú después de error:', menuError);
+			}
 		}
 	});
 }
