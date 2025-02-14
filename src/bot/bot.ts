@@ -2,15 +2,19 @@ import { Message, MessageType } from '@wppconnect-team/wppconnect';
 import { Bot } from '../interfaces/interfaces';
 import { stateManage } from './stateBot';
 import { messages } from './menuMessage';
-import { handleCensusInput, handleMenuOption } from './functionsAux';
+import { handleCensusInput, handleMenuOption, handleMessageTime } from './functionsAux';
 
-export default function bot(client: Bot['client']): void {
+export default function bot(client: Bot['client'], botStartTime: number): void {
 	console.log('bot started');
 
 	client.onMessage(async (message: Message) => {
 		try {
 			// Validaciones iniciales permanecen igual
-			if (message.isGroupMsg || message.from === 'status@broadcast') {
+			if (
+				message.isGroupMsg ||
+				message.from === 'status@broadcast' ||
+				handleMessageTime(botStartTime, message.timestamp * 1000)
+			) {
 				return;
 			}
 

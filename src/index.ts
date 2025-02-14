@@ -3,6 +3,7 @@ import { botSession } from './config/config';
 import bot from './bot/bot';
 
 async function main() {
+	const BOT_START_TIME = Date.now();
 	try {
 		const client = await wppconnect.create({
 			session: botSession,
@@ -11,7 +12,7 @@ async function main() {
 			},
 		});
 
-		bot(client);
+		bot(client, BOT_START_TIME);
 	} catch (error) {
 		console.error(error);
 	}

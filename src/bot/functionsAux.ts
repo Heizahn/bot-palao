@@ -96,7 +96,7 @@ export async function handleCensusInput(
 			'Diversion = Horario 3 (07:00 AM - 05:00 PM)\n\n' +
 			'📌 Ejemplo:\n' +
 			'Juan Perez\n' +
-			'04241234567\n' +
+			'04240000000\n' +
 			'Juanito Perez\n' +
 			'15/06/2010\n' +
 			'Descubrimiento';
@@ -152,4 +152,8 @@ export async function handleCensusInput(
 			lastMessage: messages.success,
 		});
 	}
+}
+
+export function handleMessageTime(botTime: number, smsTime: number): boolean {
+	return smsTime < botTime;
 }

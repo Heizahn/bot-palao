@@ -20,23 +20,27 @@ export function errorUserInput(userInput: {
 	const regexTime = /^(descubrimiento|crecimiento|diversi[oó]n)$/i;
 
 	if (Object.values(userInput).some((value) => value === undefined)) {
-		errors['error'] = 'Faltan datos por completar';
+		errors['error'] =
+			'Faltan datos por completar\nPor favor, ingresa la información solicitada';
 		return errors;
 	}
 	if (!regexName.test(userInput.representante!)) {
-		errors['representante'] = 'El nombre y apellido del representante no es válido';
+		errors['representante'] =
+			'El nombre y apellido del representante no es válido\nEjemplo: Juan Perez';
 	}
 
 	if (!regexTlf.test(userInput.tlf!)) {
-		errors['tlf'] = 'El número de teléfono no es válido';
+		errors['tlf'] = 'El número de teléfono no es válido\nEjemplo: 04240000000';
 	}
 
 	if (!regexName.test(userInput.alumno!)) {
-		errors['alumno'] = 'El nombre y apellido del alumno no es válido';
+		errors['alumno'] =
+			'El nombre y apellido del alumno no es válido\nEjemplo: Juanito Perez';
 	}
 
 	if (!regexDate.test(userInput.fecha_nacimiento!)) {
-		errors['fecha_nacimiento'] = 'La fecha de nacimiento no es válida';
+		errors['fecha_nacimiento'] =
+			'La fecha de nacimiento no es válida\nEjemplo: 15/06/2010';
 	} else {
 		// Validar que la fecha sea válida
 		const [day, month, year] = userInput.fecha_nacimiento!.split('/').map(Number);
