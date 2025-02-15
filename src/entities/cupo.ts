@@ -21,6 +21,9 @@ export class Cupo {
 	tlf: string;
 
 	@Column('text')
+	tlf_registro: string;
+
+	@Column('text')
 	alumno: string;
 
 	@Column('text')

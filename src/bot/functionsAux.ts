@@ -1,3 +1,5 @@
+import { SaveCupo } from '../db/saveCupo';
+import { typeTurn } from '../entities/cupo';
 import { errorUserInput } from '../error/errorUserInput';
 import { Bot, ChatState } from '../interfaces/interfaces';
 import { backButton, MainMenu, messages } from './menuMessage';
@@ -139,18 +141,38 @@ export async function handleCensusInput(
 	if (errorMessages.length > 0) {
 		const errorMessage = errorMessages.join('\n\n');
 		await client.sendText(chatId, errorMessage);
-		await client.sendListMessage(chatId, backButton); // Agregamos el botón de retorno
+		await client.sendListMessage(chatId, backButton);
 		stateManage.setState(chatId, {
 			...stateManage.getState(chatId),
 			lastMessage: errorMessage,
 		});
 	} else {
-		await client.sendText(chatId, messages.success);
-		await handleMenuOption(client, chatId, 'SHOW_MENU');
-		stateManage.setState(chatId, {
-			currentState: 'MENU',
-			lastMessage: messages.success,
-		});
+		try {
+			const horario = data.horario?.toLowerCase();
+			await SaveCupo({
+				representante: data.representante as string,
+				tlf: data.tlf as string,
+				tlf_registro: chatId.replace('@c.us', ''),
+				alumno: data.alumno as string,
+				fecha_nacimiento: data.fecha_nacimiento as string,
+				horario:
+					horario === 'descubrimiento'
+						? typeTurn.DESCUBRIMIENTO
+						: horario === 'crecimiento'
+						? typeTurn.CRECIMIENTO
+						: typeTurn.DIVERSION,
+			});
+
+			await client.sendText(chatId, messages.success);
+			await handleMenuOption(client, chatId, 'SHOW_MENU');
+			stateManage.setState(chatId, {
+				currentState: 'MENU',
+				lastMessage: messages.success,
+			});
+		} catch (error) {
+			console.error('Error al guardar los datos del censo:', error);
+			await client.sendText(chatId, 'Ocurrió un error al guardar los datos.');
+		}
 	}
 }
 

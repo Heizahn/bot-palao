@@ -22,12 +22,17 @@ if (!process.env.DB_PASS) {
 	throw new Error('DB_PASS is not defined');
 }
 
+if (!process.env.DB_NAME) {
+	throw new Error('DB_NAME is not defined');
+}
+
 export const AppDataSource = new DataSource({
 	type: process.env.DB_TYPE as MysqlConnectionOptions['type'],
 	host: process.env.DB_HOST,
 	port: Number(process.env.DB_PORT),
 	username: process.env.DB_USER,
 	password: process.env.DB_PASS,
+	database: process.env.DB_NAME,
 	synchronize: true,
 	entities: [Cupo],
 });
