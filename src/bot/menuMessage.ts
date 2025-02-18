@@ -42,11 +42,11 @@ export const messages = {
 		text:
 			`🌟 ¡Descubre el Programa Maternal! 🌟\n\n` +
 			`Dirigido a niños y niñas de 1 a 3 años, nuestro programa ofrece un entorno seguro y estimulante donde los pequeños pueden explorar, aprender y crecer. A través de actividades lúdicas y significativas, fomentamos el desarrollo emocional, social y cognitivo, potenciando la autoestima y las habilidades comunicativas.\n\n` +
-			`Con rutinas diarias que promueven la disciplina y el desarrollo de hábitos saludables, nuestros educadores guían a los niños en la formación de relaciones positivas y el descubrimiento de su mundo. ¡Dale a tu hijo la base sólida para su futuro educativo y personal!\n\n` +
-			`únete a nuestra comunidad🌈✨  👶 🧒\n` +
+			`Con rutinas diarias que promueven la disciplina y el desarrollo de hábitos saludables, nuestros educadores guían a los niños en la formación de relaciones positivas y el descubrimiento de su mundo. ¡Dale a tu hijo la base sólida para su futuro educativo y personal!!\n\n` +
+			`únete a nuestra comunidad🌈✨👶🧒\n` +
 			`Palao Rico Kids\n` +
 			`Av Michelena Edif #9-10\n` +
-			`En diagonal a la Ferretería Capanaparo`,
+			`Diagonal a la Ferretería Capanaparo`,
 	},
 	schedule: {
 		text:
