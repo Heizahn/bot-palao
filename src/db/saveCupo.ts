@@ -9,9 +9,7 @@ export async function SaveCupo(data: CupoData) {
 		const cupo = repository.create(data);
 		cupo.create_at = new Date();
 
-		const res = await repository.save(cupo);
-
-		console.log('Cupo guardado:', res);
+		await repository.save(cupo);
 	} catch (error) {
 		console.error('Error en SaveCupo:', error);
 	}
