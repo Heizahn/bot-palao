@@ -12,6 +12,7 @@ class ChatStateManager {
 			this.states.set(chatId, {
 				currentState: 'INITIAL',
 				lastMessage: '',
+				lastMessageTime: Date.now(),
 			});
 		}
 
@@ -20,11 +21,33 @@ class ChatStateManager {
 
 	public setState(chatId: string, state: Partial<ChatState>): void {
 		const currentState = this.getState(chatId);
+		if (!state.lastMessageTime) {
+			state.lastMessageTime = Date.now();
+		}
 		this.states.set(chatId, { ...currentState, ...state });
 	}
 
 	public resetState(chatId: string): void {
 		this.states.delete(chatId);
+	}
+
+	public areButtonsExpired(chatId: string, expirationTime: number = 60000): boolean {
+		const state = this.getState(chatId);
+		const currentTime = Date.now();
+
+		if (!state.lastMessageTime) {
+			false;
+		}
+
+		return state.lastMessageTime
+			? currentTime - state.lastMessageTime > expirationTime
+			: false;
+	}
+
+	public updateTime(chatId: string): void {
+		const state = this.getState(chatId);
+
+		this.states.set(chatId, { ...state, lastMessageTime: Date.now() });
 	}
 }
 

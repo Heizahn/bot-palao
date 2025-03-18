@@ -3,6 +3,7 @@ import { typeTurn } from '../entities/cupo';
 import { errorUserInput } from '../error/errorUserInput';
 import { Bot, ChatState } from '../interfaces/interfaces';
 import { backButton, MainMenu, messages } from './menuMessage';
+import { sendMessage } from './sendMessage';
 import { stateManage } from './stateBot';
 
 export async function handleMenuOption(
@@ -10,6 +11,8 @@ export async function handleMenuOption(
 	chatId: string,
 	userInput: string,
 ) {
+	const BUTTON_EXPIRATION_TIME = 60000;
+
 	// Definimos las opciones del menú con sus mensajes y estados
 	const menuOption: Record<
 		string,
@@ -32,8 +35,27 @@ export async function handleMenuOption(
 			return;
 		}
 
-		if (userInput === 'BACK_TO_MENU') {
+		if (userInput === 'BACK_TO_MENU' || userInput === '0') {
 			await handleMenuOption(client, chatId, 'SHOW_MENU');
+			stateManage.setState(chatId, {
+				currentState: 'MENU',
+				lastMessage: messages.menu,
+			});
+			return;
+		}
+
+		// Verificar si los botones han expirado (para entradas numéricas)
+		if (
+			['1', '2', '3', '4', '5'].includes(userInput) &&
+			stateManage.areButtonsExpired(chatId, BUTTON_EXPIRATION_TIME)
+		) {
+			// Mensaje de expiración
+			const expirationMessage =
+				'⏱️ Esta opción ha expirado. Aquí tienes un menú actualizado:';
+			await sendMessage(client, chatId, expirationMessage);
+
+			// Mostrar un nuevo menú
+			await sendMessage(client, chatId, MainMenu(messages.menu));
 			stateManage.setState(chatId, {
 				currentState: 'MENU',
 				lastMessage: messages.menu,
@@ -43,10 +65,9 @@ export async function handleMenuOption(
 
 		// Procesamiento de la selección del usuario
 		const selectedOption = menuOption[userInput];
-
 		if (selectedOption) {
 			// Enviamos el mensaje de la sección
-			await client.sendText(chatId, selectedOption.message);
+			await sendMessage(client, chatId, selectedOption.message);
 
 			if (selectedOption.state) {
 				// Actualizamos el estado
@@ -57,18 +78,19 @@ export async function handleMenuOption(
 
 				// Si no es una salida, mostramos el botón de retorno
 				if (selectedOption.state !== null) {
-					await client.sendListMessage(chatId, backButton);
+					await sendMessage(client, chatId, backButton);
 				}
 			} else {
 				stateManage.resetState(chatId);
 			}
 		} else {
-			await client.sendListMessage(chatId, MainMenu(messages.menu));
+			// Si la entrada no coincide con ninguna opción, mostramos el menú
+			await sendMessage(client, chatId, MainMenu(messages.menu));
 		}
 	} catch (error) {
 		console.error('Error en handleMenuOption:', error);
-		await client.sendText(chatId, messages.invalid);
-		await client.sendListMessage(chatId, MainMenu(messages.menu));
+		await sendMessage(client, chatId, messages.invalid);
+		await sendMessage(client, chatId, MainMenu(messages.menu));
 	}
 }
 
@@ -77,14 +99,13 @@ export async function handleCensusInput(
 	chatId: string,
 	userInput: string,
 ) {
+	const BUTTON_EXPIRATION_TIME = 60000;
+
 	if (userInput === '0' || userInput === 'BACK_TO_MENU') {
 		await handleMenuOption(client, chatId, 'SHOW_MENU');
-		stateManage.setState(chatId, {
-			currentState: 'MENU',
-			lastMessage: messages.welcome,
-		});
 		return;
 	}
+
 	if (!userInput.includes('\n')) {
 		const formatMessage =
 			'📝 Por favor, ingresa tus datos exactamente en este formato:\n\n' +
@@ -103,13 +124,7 @@ export async function handleCensusInput(
 			'15/06/2010\n' +
 			'Descubrimiento';
 
-		await client.sendText(chatId, formatMessage);
-
-		stateManage.setState(chatId, {
-			...stateManage.getState(chatId),
-			lastMessage: formatMessage,
-		});
-
+		await sendMessage(client, chatId, formatMessage);
 		return;
 	}
 
@@ -126,11 +141,7 @@ export async function handleCensusInput(
 	const errors = errorUserInput(data);
 
 	if (errors.error) {
-		await client.sendText(chatId, errors.error);
-		stateManage.setState(chatId, {
-			...stateManage.getState(chatId),
-			lastMessage: errors.error,
-		});
+		await sendMessage(client, chatId, errors.error);
 		return;
 	}
 
@@ -140,12 +151,8 @@ export async function handleCensusInput(
 
 	if (errorMessages.length > 0) {
 		const errorMessage = errorMessages.join('\n\n');
-		await client.sendText(chatId, errorMessage);
-		await client.sendListMessage(chatId, backButton);
-		stateManage.setState(chatId, {
-			...stateManage.getState(chatId),
-			lastMessage: errorMessage,
-		});
+		await sendMessage(client, chatId, errorMessage);
+		await sendMessage(client, chatId, backButton);
 	} else {
 		try {
 			const horario = data.horario?.toLowerCase();
@@ -163,15 +170,11 @@ export async function handleCensusInput(
 						: typeTurn.DIVERSION,
 			});
 
-			await client.sendText(chatId, messages.success);
+			await sendMessage(client, chatId, messages.success);
 			await handleMenuOption(client, chatId, 'SHOW_MENU');
-			stateManage.setState(chatId, {
-				currentState: 'MENU',
-				lastMessage: messages.success,
-			});
 		} catch (error) {
 			console.error('Error al guardar los datos del censo:', error);
-			await client.sendText(chatId, 'Ocurrió un error al guardar los datos.');
+			await sendMessage(client, chatId, 'Ocurrió un error al guardar los datos.');
 		}
 	}
 }

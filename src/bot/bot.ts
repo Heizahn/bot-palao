@@ -1,15 +1,16 @@
 import { Message, MessageType } from '@wppconnect-team/wppconnect';
 import { Bot } from '../interfaces/interfaces';
 import { stateManage } from './stateBot';
-import { messages } from './menuMessage';
+import { backButton, messages } from './menuMessage';
 import { handleCensusInput, handleMenuOption, handleMessageTime } from './functionsAux';
+import { sendMessage } from './sendMessage';
 
 export default function bot(client: Bot['client'], botStartTime: number): void {
 	console.log('bot started');
 
 	client.onMessage(async (message: Message) => {
 		try {
-			// Validaciones iniciales permanecen igual
+			// Validaciones iniciales
 			if (
 				message.isGroupMsg ||
 				message.from === 'status@broadcast' ||
@@ -59,48 +60,43 @@ export default function bot(client: Bot['client'], botStartTime: number): void {
 				case 'INFO':
 				case 'SCHEDULE':
 				case 'PAYMENT':
-					// Simplificamos el manejo de retorno al menú
+					// Verificar si los botones han expirado
+					const BUTTON_EXPIRATION_TIME = 60000;
+					const buttonsExpired = stateManage.areButtonsExpired(
+						chatId,
+						BUTTON_EXPIRATION_TIME,
+					);
+
 					if (userInput === 'BACK_TO_MENU') {
 						console.log('Volviendo al menú principal...');
 						stateManage.setState(chatId, {
 							currentState: 'MENU',
-							lastMessage: 'menu',
+							lastMessage: messages.menu,
 						});
 						await handleMenuOption(client, chatId, 'SHOW_MENU');
+					} else if (buttonsExpired) {
+						// Si los botones han expirado, informamos al usuario
+						await sendMessage(
+							client,
+							chatId,
+							'⏱️ La sesión anterior ha expirado. Aquí tienes un menú actualizado:',
+						);
+						await handleMenuOption(client, chatId, 'SHOW_MENU');
 					} else {
-						await client.sendText(chatId, messages.invalid);
-						// Mostramos el botón de retorno después del mensaje de error
-						const backButton = {
-							buttonText: '🔙 Volver al Menú',
-							description: 'Selecciona para regresar al menú principal',
-							sections: [
-								{
-									title: 'Navegación',
-									rows: [
-										{
-											rowId: 'BACK_TO_MENU',
-											title: '🔙 Volver al Menú Principal',
-											description: 'Regresar al menú de opciones',
-										},
-									],
-								},
-							],
-						};
-						await client.sendListMessage(chatId, backButton);
+						// Si es una entrada inválida (pero los botones no han expirado)
+						await sendMessage(client, chatId, messages.invalid);
+						await sendMessage(client, chatId, backButton);
 					}
-					break;
 			}
 		} catch (error) {
 			console.error('Error detallado en el bot:', error);
-			// Mejoramos el mensaje de error y proporcionamos una forma de volver al menú
-			await client.sendText(
-				message.from,
-				'Lo siento, ocurrió un error. Volvamos al menú principal...',
-			);
-			// Intentamos mostrar el menú principal después de un error
 			try {
+				await client.sendText(
+					message.from,
+					'Lo siento, ocurrió un error. Volvamos al menú principal...',
+				);
+				// Intentamos mostrar el menú principal después de un error
 				await handleMenuOption(client, message.from, 'SHOW_MENU');
-				stateManage.setState(message.from, { currentState: 'MENU' });
 			} catch (menuError) {
 				console.error('Error al mostrar menú después de error:', menuError);
 			}
